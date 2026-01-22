@@ -1,0 +1,21 @@
+<div class="board">
+  <div class="cell" *ngFor="let cell of boardCells">
+    <div class="cell-no">{{ cell }}</div>
+
+    <div class="badge"
+         *ngIf="gameService.isSnakeOrLadderStart(cell) as t"
+         [class.ladder]="t === 'LADDER'"
+         [class.snake]="t === 'SNAKE'">
+      {{ t === 'LADDER' ? '⬆' : '⬇' }}
+      <span class="to">{{ gameService.getJump(cell) }}</span>
+    </div>
+
+    <div class="tokens">
+      <span class="token"
+            *ngFor="let p of playersOn(cell)"
+            [style.background]="p.color"
+            [title]="p.name">
+      </span>
+    </div>
+  </div>
+</div>

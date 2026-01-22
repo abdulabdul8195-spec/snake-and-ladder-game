@@ -1,0 +1,24 @@
+<div class="overlay">
+  <div class="modal">
+    <div class="title">🎲 Snake & Ladder</div>
+    <div class="sub">Enter player details to start the game</div>
+
+    <div class="row">
+      <div class="label">Players</div>
+      <div class="btns">
+        <button class="pill" [class.active]="playerCount===2" (click)="setCount(2)">2</button>
+        <button class="pill" [class.active]="playerCount===3" (click)="setCount(3)">3</button>
+        <button class="pill" [class.active]="playerCount===4" (click)="setCount(4)">4</button>
+      </div>
+    </div>
+
+    <div class="names">
+      <div class="nameRow" *ngFor="let n of names; let i=index">
+        <span class="idx">{{ i+1 }}</span>
+        <input [(ngModel)]="names[i]" placeholder="Player name" />
+      </div>
+    </div>
+
+    <button class="startBtn" (click)="startGame()">Start Game</button>
+  </div>
+</div>

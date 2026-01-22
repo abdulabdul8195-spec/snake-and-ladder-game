@@ -1,1 +1,25 @@
 /* You can add global styles to this file, and also import other style files */
+:root{
+  --bg: #070A12;
+  --card: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.10);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.68);
+  --neon1: #00f5ff;
+  --neon2: #ff3df2;
+  --good: #33ff88;
+  --bad: #ff4d4d;
+}
+
+*{ box-sizing: border-box; }
+html, body{ height: 100%; }
+body{
+  margin: 0;
+  background: radial-gradient(1200px 800px at 20% 15%, rgba(0,245,255,0.18), transparent 50%),
+  radial-gradient(900px 700px at 80% 20%, rgba(255,61,242,0.16), transparent 60%),
+  radial-gradient(900px 700px at 50% 90%, rgba(51,255,136,0.10), transparent 55%),
+  var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+button{ font-family: inherit; }

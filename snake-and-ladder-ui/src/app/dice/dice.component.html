@@ -1,0 +1,6 @@
+<div class="dice" [class.rolling]="rolling">
+  <div class="value">{{ value ?? '-' }}</div>
+  <div class="dots">
+    <span class="dot" *ngFor="let d of dots"></span>
+  </div>
+</div>

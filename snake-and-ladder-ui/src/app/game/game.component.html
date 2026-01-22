@@ -1,0 +1,87 @@
+<app-start-screen *ngIf="!state.started" (start)="startGame($event)"></app-start-screen>
+
+<div class="page">
+  <div class="header">
+    <div class="title">
+      <div class="logo">🎲</div>
+      <div>
+        <div class="h1">Snake & Ladder</div>
+        <div class="sub">Angular 19 • Dark Neon UI • Autosave (LocalStorage)</div>
+      </div>
+    </div>
+
+    <button class="btn ghost" (click)="restart()">↻ Restart</button>
+  </div>
+
+  <div class="layout">
+    <!-- LEFT PANEL -->
+    <div class="panel">
+      <div class="card">
+        <div class="label">Current Turn</div>
+        <div class="turn">
+          <span class="chip" [style.boxShadow]="'0 0 22px '+currentPlayer.color">
+            <span class="dot" [style.background]="currentPlayer.color"></span>
+            {{ currentPlayer.name }}
+          </span>
+        </div>
+      </div>
+
+      <div class="card center">
+        <app-dice [value]="state.diceValue" [rolling]="state.isRolling"></app-dice>
+
+        <button class="btn primary"
+                (click)="roll()"
+                [disabled]="state.isRolling || state.winnerPlayerId">
+          {{ state.isRolling ? 'Rolling...' : 'Roll Dice' }}
+        </button>
+
+        <div class="hint" *ngIf="!state.winnerPlayerId">
+          Rule: You must reach exactly <b>100</b> to win.
+        </div>
+
+        <div class="winner" *ngIf="winner">
+          🏆 Winner: <b>{{ winner.name }}</b>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">Players</div>
+
+        <div class="players">
+          <div class="player" *ngFor="let p of state.players">
+            <div class="p-left">
+              <span class="dot" [style.background]="p.color"></span>
+              <div class="p-name">{{ p.name }}</div>
+            </div>
+            <div class="p-pos">Cell: <b>{{ p.position }}</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">Last Moves</div>
+        <div class="moves" *ngIf="state.moves.length; else none">
+          <div class="move" *ngFor="let m of state.moves">
+            <span class="m-name">{{ getMovePlayerName(m.playerId) }}</span>
+            rolled <b>{{ m.dice }}</b> :
+            <span class="m-from">{{ m.from }}</span> → <span class="m-to">{{ m.to }}</span>
+            <span class="tag"
+                  [class.ladder]="m.event==='LADDER'"
+                  [class.snake]="m.event==='SNAKE'"
+                  *ngIf="m.event !== 'NORMAL'">
+              {{ m.event }}
+            </span>
+          </div>
+        </div>
+        <ng-template #none>
+          <div class="hint">No moves yet. Roll the dice 🎲</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="boardWrap">
+      <app-board [players]="state.players"></app-board>
+    </div>
+  </div>
+</div>

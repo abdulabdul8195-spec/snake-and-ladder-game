@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { GameState, Move } from '../types';
 import { StorageService } from './storage.service';
+import { SoundService} from './sounds.service';
 
 const SNAKES_LADDERS: Record<number, number> = {
   // Ladders
@@ -28,7 +29,10 @@ const SNAKES_LADDERS: Record<number, number> = {
   providedIn: 'root',
 })
 export class GameService {
-  constructor(private storage: StorageService) {}
+  constructor(
+    private storage: StorageService,
+    private sound: SoundService
+  ) {}
 
   createNewGame(names: string[] = ['Abdul', 'Opponent']): GameState {
     const colors = ['#00f5ff', '#ff3df2', '#33ff88', '#ffaa33'];
@@ -66,11 +70,11 @@ export class GameService {
       moves: [],
     };
   }
+
   startNew(names: string[]): GameState {
     this.storage.clear();
     return this.createNewGame(names);
   }
-
 
   reset(): GameState {
     this.storage.clear();
@@ -81,75 +85,93 @@ export class GameService {
     if (state.isRolling) return state;
     if (state.winnerPlayerId) return state;
 
-    // start rolling animation values
     const cloned = this.clone(state);
     cloned.isRolling = true;
     this.storage.save(cloned);
 
-    // fake rolling animation (10 frames)
+    // ✅ dice sound once at start
+    this.sound.playDice();
+
+    // Dice rolling animation frames
     for (let i = 0; i < 10; i++) {
       await this.sleep(60);
       cloned.diceValue = 1 + Math.floor(Math.random() * 6);
       this.storage.save(cloned);
     }
 
-    // final dice
+    // Final dice value
     const dice = 1 + Math.floor(Math.random() * 6);
     cloned.diceValue = dice;
 
-    // move current player
+    // Current player
     const player = cloned.players[cloned.currentTurnIndex];
     const from = player.position;
 
-    let to = from + dice;
-    if (to > 100) {
-      // rule: must land exactly on 100 (so no movement)
-      to = from;
+    // 1) calculate step target (exact 100 rule)
+    let stepTarget = from + dice;
+    if (stepTarget > 100) {
+      stepTarget = from; // no movement
     }
 
-    let event: Move['event'] = 'NORMAL';
-
-    if (SNAKES_LADDERS[to]) {
-      const jumpTo = SNAKES_LADDERS[to];
-      event = jumpTo > to ? 'LADDER' : 'SNAKE';
-      to = jumpTo;
-    }
-
-// step-by-step movement
-    const stepTarget = from + dice > 100 ? from : from + dice;
-
+    // 2) step-by-step movement animation + move sound
     for (let pos = from + 1; pos <= stepTarget; pos++) {
       await this.sleep(140);
       player.position = pos;
-      // save while moving so UI animates
+
+      // ✅ move step sound
+      this.sound.playMove();
+
       this.storage.save(cloned);
     }
 
+    // 3) snake / ladder jump animation + sound
+    let finalPos = player.position;
+    let event: Move['event'] = 'NORMAL';
+
+    if (SNAKES_LADDERS[finalPos]) {
+      const jumpTo = SNAKES_LADDERS[finalPos];
+      event = jumpTo > finalPos ? 'LADDER' : 'SNAKE';
+
+      // ✅ snake/ladder sound
+      if (event === 'SNAKE') this.sound.playSnake();
+      else this.sound.playLadder();
+
+      await this.sleep(250);
+      player.position = jumpTo;
+
+      finalPos = jumpTo;
+      this.storage.save(cloned);
+    }
+
+    // Move history
     const move: Move = {
       playerId: player.id,
       dice,
       from,
-      to,
+      to: finalPos,
       event,
     };
 
-    // push history (keep last 8)
     cloned.moves = [move, ...cloned.moves].slice(0, 8);
 
-    // winner
-    if (to === 100) {
+    // Winner check
+    if (finalPos === 100) {
       cloned.winnerPlayerId = player.id;
+
+      // ✅ win sound
+      this.sound.playWin();
     } else {
-      // change turn
-      cloned.currentTurnIndex = (cloned.currentTurnIndex + 1) % cloned.players.length;
+      cloned.currentTurnIndex =
+        (cloned.currentTurnIndex + 1) % cloned.players.length;
     }
 
     cloned.isRolling = false;
     this.storage.save(cloned);
+
     return cloned;
   }
 
-  // Helper
+  // Helpers
   private clone(state: GameState): GameState {
     return JSON.parse(JSON.stringify(state)) as GameState;
   }
